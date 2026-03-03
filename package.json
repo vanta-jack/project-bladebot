@@ -1,0 +1,30 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "Discord bot for tracking stats in Blades in the Dark and commands for the game. ## Core Features - **Dice rolling**: Blades in the Dark dice rolls for actions and resistance rolls. - **Standard dice rolling**: use dice of standard configuration such as d2, d3, d6, d10, d20, or any custom dice configuration.  - **Generating progress clocks**: Procedurally generated progress clocks to ensure any values are accounted for. ## Planned Features - **Dashboard:** A per-server dashboard to manage  - **Providing Devil’s Bargain cards and rolling Entanglements**: Now fully customizable via dashboard! - **Wiki**: a mini wiki accessible via commands",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vanta-jack/project-bladebot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/vanta-jack/project-bladebot/issues"
+  },
+  "homepage": "https://github.com/vanta-jack/project-bladebot#readme",
+  "dependencies": {
+    "discord.js": "^14.25.1",
+    "dotenv": "^17.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
