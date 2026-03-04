@@ -1,7 +1,14 @@
 /* 
-TODO: Refactor and split logics into their own functions.
-TODO: Make the dice roll checker algorithm more efficient.
-TODO: Document the changes and implementation from the previous tasks in the spec-bladesroll.md. Append these at the bottom. Give explanation of the concepts used for the optimization. Highlight Big-O difference and breakdown between previous code and current optimization
+TODO: Refactor this file into three named functions within the same file:
+  - `parseInputs(interaction)` → returns { dots, push_yourself, devils_bargain, assist, diceCount }
+  - `rollDice({ diceCount })` → returns { rolls, rollZero, highest, sixesCount, resultTitle }
+  - `buildEmbed({ rolls, resultTitle, push_yourself, devils_bargain, assist })` → returns EmbedBuilder
+  The `execute()` function should call these in sequence and remain the only async entry point.
+
+TODO: Read spec-bladesroll.md first to match its existing format. Append a new section at the bottom documenting:
+  - What changed and why (input parsing, dice logic, embed display now separated)
+  - A before/after code comparison showing the monolithic execute() vs the refactored version
+  - Brief explanation of separation of concerns as applied here
 */
 
 import { SlashCommandBuilder, CommandInteraction, EmbedBuilder } from 'discord.js';
