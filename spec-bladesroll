@@ -36,3 +36,53 @@ For testing, the output should be in an embed look like this for 4d6
 [3, 2, 4, 5] Partial Success
 You pushed yourself! Remember to mark 2 stress
 Your teammate helped you! Remind them to mark 1 stress
+
+## Refactoring Changes
+**What changed and why**
+The previously monolithic `execute()` function within `bladesroll.ts` was refactored by extracting code into three named functions:
+* `parseInputs(interaction)` handles reading user options and resolving the total `diceCount`.
+* `rollDice({ diceCount })` manages generating dice roll values and determining the result based on Blades in the Dark rules.
+* `buildEmbed({ rolls, resultTitle, push_yourself, devils_bargain, assist })` formats the outcomes and descriptions into a Discord Embed message.
+
+**Separation of Concerns**
+Separation of concerns is a design principle of dividing a program into distinct sections, each addressing a separate responsibility. By delegating individual tasks (input parsing, business logic, output generation), each refactored block can be updated or tested independently without affecting unrelated logic.
+
+**Code Comparison**
+
+*Before (Monolithic `execute()`)*:
+```typescript
+async execute(interaction: CommandInteraction) {
+    if (!interaction.isChatInputCommand()) return;
+
+    const dots = interaction.options.getInteger('dots') ?? 0;
+    // ... all input parsing
+
+    if (push_yourself && devils_bargain) { ... }
+
+    // ... all dice calculation
+
+    // ... all embed formatting
+
+    await interaction.reply({ embeds: [embed] });
+}
+```
+
+*After (Refactored `execute()`)*:
+```typescript
+async execute(interaction: CommandInteraction) {
+    if (!interaction.isChatInputCommand()) return;
+
+    const { dots, push_yourself, devils_bargain, assist, diceCount } = parseInputs(interaction);
+
+    if (push_yourself && devils_bargain) {
+        await interaction.reply({ content: 'You cannot use both Push Yourself and a Devil\'s Bargain simultaneously!', ephemeral: true });
+        return;
+    }
+
+    const { rolls, resultTitle } = rollDice({ diceCount });
+
+    const embed = buildEmbed({ rolls, resultTitle, push_yourself, devils_bargain, assist });
+
+    await interaction.reply({ embeds: [embed] });
+}
+```
