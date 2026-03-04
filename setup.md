@@ -2,6 +2,18 @@
 
 This guide details how to start the bot from scratch.
 
+## 0. Ensure dependencies
+
+<!-- TODO: Write section on installing the dependencies in the future. Like maybe getting dependencies in package.json and automatically installing it. -->
+```json
+"dependencies": {
+    "@discordjs/rest": "^1.7.1",
+    "discord.js": "^14.25.1",
+    "dotenv": "^17.3.1"
+  }
+```
+
+
 ## 1. Discord Developer Portal
 
 1. Go to the [Discord Developer Portal](https://discord.com/developers/applications).

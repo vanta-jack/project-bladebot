@@ -53,18 +53,26 @@ function rollDice({ diceCount }: { diceCount: number }) {
     return { rolls, rollZero, highest, sixesCount, resultTitle };
 }
 
+/* 
+TODO: Make embedColor a variable that changes depending on the outcome!
+    - Critical Success: Violet      crit-color: #hex-value
+    - Full Success: Green           success-color: #hex-value
+    - Partial Success: Yellow       partial-color: #hex-value
+    - Fail: Red                     fail-color: #hex-value
+where "outcome-color" is the variable name and mapped to specific variables
+*/
 function buildEmbed({ rolls, resultTitle, push_yourself, devils_bargain, assist }: { rolls: number[], resultTitle: string, push_yourself: boolean, devils_bargain: boolean, assist: boolean }) {
-    const embedColor = 0x2b2d31; // dark grey typical discord embed color, easily adjustable.
+    const embedColor = 0x2b2d31; // TODO: Make 
     let description = `[${rolls.join(', ')}] **${resultTitle}**\n`;
 
     if (push_yourself) {
-        description += 'You pushed yourself! Remember to mark 2 stress\n';
+        description += 'You pushed yourself... Mark 2 stress\n';
     }
     if (devils_bargain) {
         description += 'You took a Devil\'s Bargain!\n';
     }
     if (assist) {
-        description += 'Your teammate helped you! Remind them to mark 1 stress\n';
+        description += 'Your ally helped you... Remind them to mark 1 stress\n';
     }
 
     const embed = new EmbedBuilder()
@@ -81,21 +89,21 @@ const command = {
         .setDescription('Rolls dice for Blades in the Dark')
         .addIntegerOption(option =>
             option.setName('dots')
-                .setDescription('The dots of a character in a specific action (0-4)')
+                .setDescription('Your dots in the specific action (0-4)')
                 .setMinValue(0)
                 .setMaxValue(4)
-                .setRequired(false))
+                .setRequired(true))
         .addBooleanOption(option =>
             option.setName('push_yourself')
-                .setDescription('+1 bonus die, acknowledge player pushing themselves')
+                .setDescription('+1 bonus die if you push yourself, but take 2 stress')
                 .setRequired(false))
         .addBooleanOption(option =>
             option.setName('devils_bargain')
-                .setDescription('+1 bonus die, acknowledge the player took the devils bargain')
+                .setDescription("+1 bonus die if you take the devil's bargain")
                 .setRequired(false))
         .addBooleanOption(option =>
             option.setName('assist')
-                .setDescription('+1 bonus die, acknowledge player is being assisted')
+                .setDescription('+1 bonus die if another player agrees to assist you, but they take 1 stress')
                 .setRequired(false)),
     async execute(interaction: CommandInteraction) {
         if (!interaction.isChatInputCommand()) return;
