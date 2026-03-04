@@ -1,3 +1,9 @@
+/* 
+TODO: Refactor and split logics into their own functions.
+TODO: Make the dice roll checker algorithm more efficient.
+TODO: Document the changes and implementation from the previous tasks in the spec-bladesroll.md. Append these at the bottom. Give explanation of the concepts used for the optimization. Highlight Big-O difference and breakdown between previous code and current optimization
+*/
+
 import { SlashCommandBuilder, CommandInteraction, EmbedBuilder } from 'discord.js';
 
 const command = {
