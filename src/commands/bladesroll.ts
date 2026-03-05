@@ -41,13 +41,13 @@ function rollDice({ diceCount }: { diceCount: number }) {
     let sixesCount = rolls.filter(r => r === 6).length;
 
     if (!rollZero && highest === 6 && sixesCount >= 2) {
-        resultTitle = 'Critical Success';
+        resultTitle = 'critical';
     } else if (highest === 6) {
-        resultTitle = 'Success';
+        resultTitle = 'success';
     } else if (highest === 4 || highest === 5) {
-        resultTitle = 'Partial Success';
+        resultTitle = 'partial';
     } else {
-        resultTitle = 'Fail';
+        resultTitle = 'fail';
     }
 
     return { rolls, rollZero, highest, sixesCount, resultTitle };
@@ -85,7 +85,7 @@ function buildEmbed({ rolls, resultTitle, push_yourself, devils_bargain, assist 
 
 const command = {
     data: new SlashCommandBuilder()
-        .setName('bladesroll')
+        .setName('blades')
         .setDescription('Rolls dice for Blades in the Dark')
         .addIntegerOption(option =>
             option.setName('dots')
