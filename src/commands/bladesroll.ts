@@ -54,7 +54,7 @@ function rollDice({ diceCount }: { diceCount: number }) {
 }
 
 /* 
-TODO: Make embedColor a variable that changes depending on the outcome!
+TODO: Make embedColor a variable that changes depending on the outcome (resultTitle) of the roll. For example:
     - Critical Success: Violet      crit-color: #hex-value
     - Full Success: Green           success-color: #hex-value
     - Partial Success: Yellow       partial-color: #hex-value
