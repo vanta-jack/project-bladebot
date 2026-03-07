@@ -1,12 +1,11 @@
-import { SlashCommandBuilder, CommandInteraction } from 'discord.js';
+import { APIApplicationCommandInteraction, APIInteractionResponse, RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
-export interface Command {
-    data: SlashCommandBuilder | Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">;
-    execute: (interaction: CommandInteraction) => Promise<void>;
+export interface Env {
+    DISCORD_PUBLIC_KEY: string;
+    DISCORD_APPLICATION_ID: string;
 }
 
-export interface Event {
-    name: string;
-    once?: boolean;
-    execute: (...args: any[]) => void | Promise<void>;
+export interface Command {
+    data: RESTPostAPIChatInputApplicationCommandsJSONBody;
+    execute: (interaction: APIApplicationCommandInteraction, env: Env) => APIInteractionResponse | Promise<APIInteractionResponse>;
 }

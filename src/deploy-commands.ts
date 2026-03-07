@@ -1,44 +1,58 @@
-import { REST, Routes } from 'discord.js';
-import * as dotenv from 'dotenv';
-import * as fs from 'fs';
-import * as path from 'path';
-import { Command } from './types';
+import fs from 'node:fs';
+import path from 'node:path';
 
-dotenv.config();
-
-const commands: any[] = [];
+// Since this is run via ts-node, we can use standard __dirname
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts') || file.endsWith('.js'));
 
-for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
-    const command = require(filePath).default as Command;
-    commands.push(command.data.toJSON());
-}
+const commandsPayload: any[] = [];
 
-const token = process.env.DISCORD_TOKEN;
-const clientId = process.env.CLIENT_ID;
-const guildId = process.env.GUILD_ID;
+// Dynamic imports are asynchronous
+async function loadCommands() {
+    for (const file of commandFiles) {
+        const filePath = path.join(commandsPath, file);
+        // We use import() instead of require()
+        const module = await import(`file://${filePath}`);
+        const command = module.default;
 
-if (!token || !clientId || !guildId) {
-    console.error('Missing DISCORD_TOKEN, CLIENT_ID, or GUILD_ID in .env');
-    process.exit(1);
-}
-
-const rest = new REST({ version: '10' }).setToken(token);
-
-(async () => {
-    try {
-        console.log(`Started refreshing ${commands.length} application (/) commands.`);
-
-        // The put method is used to fully refresh all commands in the guild with the current set
-        const data = await rest.put(
-            Routes.applicationGuildCommands(clientId, guildId),
-            { body: commands },
-        );
-
-        console.log(`Successfully reloaded ${Array.isArray(data) ? data.length : 0} application (/) commands.`);
-    } catch (error) {
-        console.error(error);
+        if (command && command.data) {
+             commandsPayload.push(command.data);
+        }
     }
-})();
+
+    const token = process.env.DISCORD_TOKEN;
+    const clientId = process.env.CLIENT_ID;
+    const guildId = process.env.GUILD_ID;
+
+    if (!token || !clientId || !guildId) {
+        console.error('Missing DISCORD_TOKEN, CLIENT_ID, or GUILD_ID in your environment variables.');
+        process.exit(1);
+    }
+
+    console.log(`Started refreshing ${commandsPayload.length} application (/) commands using raw fetch.`);
+
+    const url = `https://discord.com/api/v10/applications/${clientId}/guilds/${guildId}/commands`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bot ${token}`
+            },
+            body: JSON.stringify(commandsPayload)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(`Discord API error: ${response.status} - ${errorData}`);
+        }
+
+        const data = await response.json() as any[];
+        console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+    } catch (error) {
+        console.error('Failed to register commands:', error);
+    }
+}
+
+loadCommands();

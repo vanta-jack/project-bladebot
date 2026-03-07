@@ -1,56 +1,80 @@
-import { Client, GatewayIntentBits, Collection } from 'discord.js';
-import * as dotenv from 'dotenv';
-import * as fs from 'fs';
-import * as path from 'path';
-import { Command, Event } from './types';
+import { verifyKey } from 'discord-interactions';
+import { InteractionType, APIInteraction, InteractionResponseType } from 'discord-api-types/v10';
+import { Env } from './types.js';
 
-dotenv.config();
+import ping from './commands/ping.js';
+import bladesroll from './commands/bladesroll.js';
 
-// Extend the Client to include a commands collection
-declare module 'discord.js' {
-    export interface Client {
-        commands: Collection<string, Command>;
-    }
-}
+const commands = [ping, bladesroll];
 
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-    ],
-});
-
-client.commands = new Collection<string, Command>();
-
-// Load commands
-const commandsPath = path.join(__dirname, 'commands');
-if (fs.existsSync(commandsPath)) {
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts') || file.endsWith('.js'));
-    for (const file of commandFiles) {
-        const filePath = path.join(commandsPath, file);
-        const command = require(filePath).default as Command;
-        if ('data' in command && 'execute' in command) {
-            client.commands.set(command.data.name, command);
-        } else {
-            console.warn(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+export default {
+    async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+        // 1. Only allow POST requests
+        if (request.method !== 'POST') {
+            return new Response('Method Not Allowed', { status: 405 });
         }
-    }
-}
 
-// Load events
-const eventsPath = path.join(__dirname, 'events');
-if (fs.existsSync(eventsPath)) {
-    const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.ts') || file.endsWith('.js'));
-    for (const file of eventFiles) {
-        const filePath = path.join(eventsPath, file);
-        const event = require(filePath).default as Event;
-        if (event.once) {
-            client.once(event.name, (...args) => event.execute(...args));
-        } else {
-            client.on(event.name, (...args) => event.execute(...args));
+        // 2. Extract Discord signature headers
+        const signature = request.headers.get('x-signature-ed25519');
+        const timestamp = request.headers.get('x-signature-timestamp');
+
+        if (!signature || !timestamp || !env.DISCORD_PUBLIC_KEY) {
+            return new Response('Bad request signature', { status: 401 });
         }
-    }
-}
 
-client.login(process.env.DISCORD_TOKEN);
+        // 3. Clone the request to read the body text for verification
+        const bodyText = await request.clone().text();
+
+        // 4. Verify the ed25519 signature
+        const isValidRequest = verifyKey(
+            bodyText,
+            signature,
+            timestamp,
+            env.DISCORD_PUBLIC_KEY
+        );
+
+        if (!isValidRequest) {
+            return new Response('Bad request signature', { status: 401 });
+        }
+
+        // 5. Parse the validated JSON body
+        const interaction = await request.json() as APIInteraction;
+
+        // 6. Handle Discord's initial PING (required for setup)
+        if (interaction.type === InteractionType.Ping) {
+            return Response.json({ type: InteractionResponseType.Pong });
+        }
+
+        // 7. Handle Application Commands (Slash Commands)
+        if (interaction.type === InteractionType.ApplicationCommand) {
+            const commandName = interaction.data.name;
+
+            // Find the matching command handler
+            const command = commands.find(c => c.data.name === commandName);
+
+            if (!command) {
+                console.error(`Command ${commandName} not found.`);
+                return new Response('Command not found', { status: 400 });
+            }
+
+            try {
+                // Execute the command logic and return the JSON response
+                // We cast interaction here because we checked the type above
+                const responsePayload = await command.execute(interaction as any, env);
+                return Response.json(responsePayload);
+            } catch (error) {
+                console.error('Error executing command:', error);
+                return Response.json({
+                    type: InteractionResponseType.ChannelMessageWithSource,
+                    data: {
+                        content: 'There was an error while executing this command!',
+                        flags: 64 // Ephemeral
+                    }
+                });
+            }
+        }
+
+        // Catch-all for other interaction types
+        return new Response('Unknown interaction type', { status: 400 });
+    }
+};
