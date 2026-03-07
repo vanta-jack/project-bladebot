@@ -1,0 +1,8 @@
+name = "project-bladebot"
+main = "src/index.ts"
+compatibility_date = "2024-03-20"
+
+[vars]
+# You will set DISCORD_PUBLIC_KEY and DISCORD_APPLICATION_ID in Cloudflare Dashboard
+# DISCORD_PUBLIC_KEY = ""
+# DISCORD_APPLICATION_ID = ""
