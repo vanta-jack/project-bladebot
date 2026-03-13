@@ -1,6 +1,14 @@
 # Dev Logs
 From newest to oldest
 ## Adding the template to the existing repository
+We are using curl over clone because we are just interested in copying the current repository of the sample bot
+```bash
+curl -L https://github.com/discord/cloudflare-sample-app/archive/refs/heads/main.tar.gz | tar -xz --strip-components=1
+```
+
+
+## git switch vs git checkout
+I used `git switch -c <branch>` to make the new branch `cloudflare-worker-app` because it is more clear on its intent. `git checkout` will be used more for managing branches and restoring files.
 
 ## Setting up codespacee 
 > I would like to use bun for this project and have other dependencies in docker. 

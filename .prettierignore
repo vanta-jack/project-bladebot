@@ -1,0 +1,12 @@
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment files
+.env
+.env.*
+
+# Coverage reports
+coverage/
