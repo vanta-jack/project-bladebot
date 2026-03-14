@@ -7,10 +7,11 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "skipLibCheck": true,
-    "types": ["@cloudflare/workers-types", "mocha"],
+    "types": ["@cloudflare/workers-types", "@types/mocha"],
     "outDir": "dist",
     "rootDir": ".",
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   },
   "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules", "dist"]
