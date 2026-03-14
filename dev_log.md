@@ -1,6 +1,67 @@
 # Dev Logs
 From newest to oldest
 
+## running the bot
+```bash
+# register commands
+bun run src/register.ts
+# start the bot or something, use as entry point
+bun run src/index.ts
+# deploy
+bun wrangler deploy
+```
+I'm not too sure in what order to write these commands at the moment. But hey, it's working now.
+
+I have to deploy. Then go to Discord Dev Portal > App > General Information > Interactions Endpoint URL
+then pasted the link from Cloudflare Dasboard > App. The link should be there.
+
+example interactions endpoint url: `https://appname.username.workers.dev/`
+
+## ngrok tunnel
+
+Update: Since we are in a codespace instance, I do not see a point in using ngrok for local testing. See above for updated logs.
+
+I may have lazily pasted the EXPORT to shell rather than setting them it up in config files. Note that ngrok authtoken does not work in the .env file
+
+`export NGROK_AUTHTOKEN=authoken`
+
+Future iterations should make an `ngrok.yml` by using `ngrok config edit`
+```yml 
+# ngrok.yml
+version: 3
+agent:
+  authtoken: <your-authtoken>
+```
+
+## .env file
+
+Apparently, I still need to have a .env file to handle stuff like registering via `bun run src/register` from this codespaces machine.
+
+I am aware the documentations for this bot is specifically highlighting there is no need for a .env, however I cannot be bothered with manually copy-pasting everything every damn time. Hence I am simply going to make one and adding it to .gitignore
+
+## Putting secrets in wrangler
+
+The Discord Developer Documentation says to put secrets via `wrangler secret put [KEY]`
+
+Since I am using bun, this is the sequence. Do them one at a time.
+
+```bash
+$ bun wrangler secret put DISCORD_TOKEN
+$ bun wrangler secret put DISCORD_PUBLIC_KEY
+$ bun wrangler secret put DISCORD_APPLICATION_ID
+$ bun wrangler secret put DISCORD_TEST_GUILD_ID
+```
+
+This will prompt you for the values in the CLI. Just paste the correct information
+
+The secrets are actually put in Cloudflare Dashboard > Workers and Pages > App Name > Settings > Variables and Secrets
+
+## Discord CDN images on Cloudflare Worker Bot
+
+Taken from [Discord Developer Documentation](https://docs.discord.com/developers/tutorials/hosting-on-cloudflare-workers#creating-your-cloudflare-worker)
+
+> WARN: When using Cloudflare Workers, your app won’t be able to access non-ephemeral CDN media. For example, trying to fetch an image like https://cdn.discordapp.com/attachments/1234/56789/my_image.png would result in a 403 error. Cloudflare Workers are still able to access ephemeral CDN media.
+
 ## deploying the app?
 
 using `bun x wrangler deploy`, I was able to get the app deployed. Since I am on Codespaces, it required some manual splicing of links to get the goddamn thing to work. Would not recommend doing this on a beat-up iOS 16 iPad.
