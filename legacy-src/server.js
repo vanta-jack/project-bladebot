@@ -16,7 +16,7 @@ class JsonResponse extends Response {
   constructor(body, init) {
     const jsonBody = JSON.stringify(body);
     init = init || {
-      headers: {
+    headers: {
         'content-type': 'application/json;charset=UTF-8',
       },
     };

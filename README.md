@@ -2,6 +2,7 @@
 
 Discord bot for tracking stats in Blades in the Dark and commands for the game.
 ## Core Features
+
 - **Dice rolling**: Blades in the Dark dice rolls for actions and resistance rolls.
 - **Standard dice rolling**: use dice of standard configuration such as d2, d3, d6, d10, d20, or any custom dice configuration. 
 - **Generating progress clocks**: Procedurally generated progress clocks to ensure any values are accounted for.
