@@ -1,25 +1,23 @@
 import { expect } from 'chai';
-import { describe, it, beforeEach, afterEach } from 'mocha';
 import {
   InteractionResponseType,
   InteractionType,
   InteractionResponseFlags,
 } from 'discord-interactions';
-import { AWW_COMMAND, INVITE_COMMAND } from '../src/commands.js';
+import { AWW_COMMAND, INVITE_COMMAND } from '../src/commands/index.ts';
 import sinon from 'sinon';
-import server from '../src/server.js';
-import { redditUrl } from '../src/reddit.js';
+import * as server from '../src/server.ts';
+import { redditUrl } from '../src/reddit.ts';
 
 describe('Server', () => {
   describe('GET /', () => {
     it('should return a greeting message with the Discord application ID', async () => {
-      const request = {
+      const request = new Request('http://discordo.example/', {
         method: 'GET',
-        url: new URL('/', 'http://discordo.example'),
-      };
-      const env = { DISCORD_APPLICATION_ID: '123456789' };
+      });
+      const env = { DISCORD_APPLICATION_ID: '123456789', DISCORD_PUBLIC_KEY: 'test' };
 
-      const response = await server.fetch(request, env);
+      const response = await server.handleRequest(request, env);
       const body = await response.text();
 
       expect(body).to.equal('👋 123456789');
@@ -27,14 +25,11 @@ describe('Server', () => {
   });
 
   describe('POST /', () => {
-    let verifyDiscordRequestStub;
-
     beforeEach(() => {
-      verifyDiscordRequestStub = sinon.stub(server, 'verifyDiscordRequest');
     });
 
     afterEach(() => {
-      verifyDiscordRequestStub.restore();
+      sinon.restore();
     });
 
     it('should handle a PING interaction', async () => {
@@ -42,19 +37,20 @@ describe('Server', () => {
         type: InteractionType.PING,
       };
 
-      const request = {
+      const request = new Request('http://discordo.example/', {
         method: 'POST',
-        url: new URL('/', 'http://discordo.example'),
-      };
-
-      const env = {};
-
-      verifyDiscordRequestStub.resolves({
-        isValid: true,
-        interaction: interaction,
+        headers: {
+          'x-signature-ed25519': 'sig',
+          'x-signature-timestamp': 'timestamp',
+        },
+        body: JSON.stringify(interaction),
       });
 
-      const response = await server.fetch(request, env);
+      const env = { DISCORD_APPLICATION_ID: 'test', DISCORD_PUBLIC_KEY: 'test' };
+
+      sinon.stub(server.discordAuth, 'verifyKey').resolves(true);
+
+      const response = await server.handleRequest(request, env);
       const body = await response.json();
       expect(body.type).to.equal(InteractionResponseType.PONG);
     });
@@ -67,17 +63,18 @@ describe('Server', () => {
         },
       };
 
-      const request = {
+      const request = new Request('http://discordo.example/', {
         method: 'POST',
-        url: new URL('/', 'http://discordo.example'),
-      };
-
-      const env = {};
-
-      verifyDiscordRequestStub.resolves({
-        isValid: true,
-        interaction: interaction,
+        headers: {
+          'x-signature-ed25519': 'sig',
+          'x-signature-timestamp': 'timestamp',
+        },
+        body: JSON.stringify(interaction),
       });
+
+      const env = { DISCORD_APPLICATION_ID: 'test', DISCORD_PUBLIC_KEY: 'test' };
+
+      sinon.stub(server.discordAuth, 'verifyKey').resolves(true);
 
       // mock the fetch call to reddit
       const result = sinon
@@ -88,9 +85,9 @@ describe('Server', () => {
           status: 200,
           ok: true,
           json: sinon.fake.resolves({ data: { children: [] } }),
-        });
+        } as unknown as Response);
 
-      const response = await server.fetch(request, env);
+      const response = await server.handleRequest(request, env);
       const body = await response.json();
       expect(body.type).to.equal(
         InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -106,21 +103,23 @@ describe('Server', () => {
         },
       };
 
-      const request = {
+      const request = new Request('http://discordo.example/', {
         method: 'POST',
-        url: new URL('/', 'http://discordo.example'),
-      };
+        headers: {
+          'x-signature-ed25519': 'sig',
+          'x-signature-timestamp': 'timestamp',
+        },
+        body: JSON.stringify(interaction),
+      });
 
       const env = {
         DISCORD_APPLICATION_ID: '123456789',
+        DISCORD_PUBLIC_KEY: 'test',
       };
 
-      verifyDiscordRequestStub.resolves({
-        isValid: true,
-        interaction: interaction,
-      });
+      sinon.stub(server.discordAuth, 'verifyKey').resolves(true);
 
-      const response = await server.fetch(request, env);
+      const response = await server.handleRequest(request, env);
       const body = await response.json();
       expect(body.type).to.equal(
         InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -139,30 +138,32 @@ describe('Server', () => {
         },
       };
 
-      const request = {
+      const request = new Request('http://discordo.example/', {
         method: 'POST',
-        url: new URL('/', 'http://discordo.example'),
-      };
-
-      verifyDiscordRequestStub.resolves({
-        isValid: true,
-        interaction: interaction,
+        headers: {
+          'x-signature-ed25519': 'sig',
+          'x-signature-timestamp': 'timestamp',
+        },
+        body: JSON.stringify(interaction),
       });
 
-      const response = await server.fetch(request, {});
+      const env = { DISCORD_APPLICATION_ID: 'test', DISCORD_PUBLIC_KEY: 'test' };
+
+      sinon.stub(server.discordAuth, 'verifyKey').resolves(true);
+
+      const response = await server.handleRequest(request, env);
       const body = await response.json();
       expect(response.status).to.equal(400);
-      expect(body.error).to.equal('Unknown Type');
+      expect(body.error).to.equal('Unknown Command');
     });
   });
 
   describe('All other routes', () => {
     it('should return a "Not Found" response', async () => {
-      const request = {
+      const request = new Request('http://discordo.example/unknown', {
         method: 'GET',
-        url: new URL('/unknown', 'http://discordo.example'),
-      };
-      const response = await server.fetch(request, {});
+      });
+      const response = await server.handleRequest(request, { DISCORD_APPLICATION_ID: 'test', DISCORD_PUBLIC_KEY: 'test' });
       expect(response.status).to.equal(404);
       const body = await response.text();
       expect(body).to.equal('Not Found.');
