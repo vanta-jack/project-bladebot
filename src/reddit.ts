@@ -4,7 +4,7 @@
  * and return a random result.
  * @returns The url of an image or video which is cute.
  */
-export async function getCuteUrl() {
+export async function getCuteUrl(): Promise<string> {
   const response = await fetch(redditUrl, {
     headers: {
       'User-Agent': 'justinbeckwith:awwbot:v1.0.0 (by /u/justinblat)',
@@ -22,7 +22,20 @@ export async function getCuteUrl() {
     }
     throw new Error(errorText);
   }
-  const data = await response.json();
+
+  const data = (await response.json()) as {
+    data: {
+      children: Array<{
+        is_gallery?: boolean;
+        data?: {
+          media?: { reddit_video?: { fallback_url?: string } };
+          secure_media?: { reddit_video?: { fallback_url?: string } };
+          url?: string;
+        };
+      }>;
+    };
+  };
+
   const posts = data.data.children
     .map((post) => {
       if (post.is_gallery) {
@@ -34,10 +47,10 @@ export async function getCuteUrl() {
         post.data?.url
       );
     })
-    .filter((post) => !!post);
+    .filter((post): post is string => !!post);
   const randomIndex = Math.floor(Math.random() * posts.length);
   const randomPost = posts[randomIndex];
-  return randomPost;
+  return randomPost || '';
 }
 
 export const redditUrl = 'https://www.reddit.com/r/aww/hot.json';

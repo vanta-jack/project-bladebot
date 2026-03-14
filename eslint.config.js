@@ -8,6 +8,11 @@ export default [
     languageOptions: {
       globals: {
         ...globals.browser,
+        ...globals.mocha,
+        Request: 'readonly',
+        Response: 'readonly',
+        ResponseInit: 'readonly',
+        HeadersInit: 'readonly'
       },
     },
   },
